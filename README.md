@@ -29,3 +29,10 @@ Rate-limiting needs a data structure, not a framework. Most token-bucket librari
 Tokens are real numbers, not integers. A `refillRate` of `0.01` tokens per millisecond means a fractional token accumulates over partial-millisecond intervals. This is deliberate — it lets you express rates like "5 requests per second" without rounding surprises — but it means `bucket.tokens` can be `3.5`. Costs can also be fractional. If you want integer-only behaviour, floor `cost` and `refillRate` yourself; the library does not impose it.
 
 The clock is injectable via the `clock` constructor argument so tests can be deterministic. If omitted, `Date.now` is used. A backwards-moving clock (NTP adjustments, manual changes) is tolerated: the bucket resets its refill reference point and never grants tokens for negative elapsed time.
+
+## Design notes
+
+The window stores values eagerly rather than keeping running aggregates. Running
+sums drift with floating point over long streams, and recomputing from a small
+buffer is cheap enough that the drift is not worth the speed.
+
